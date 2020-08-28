@@ -1,0 +1,40 @@
+
+Asp:
+<link rel="stylesheet" type="text/css" href="<%= sSystemPath %>/files/jquery.autocomplete.css?build=<%= strBuild %>" />
+<script type="text/javascript" language="javascript" src="<%= sSystemPath %>/core/jquery.autocomplete.v1.2.js"></script>
+
+Javascript:
+ $("#customerCompanyName").autocomplete("ws/customers.asp",{
+        width: 260,
+        scroll: true,
+        scrollHeight: 220,
+        matchContains: true,
+        minChars: 2,              
+        delay: 400,
+        extraParams: {doAction: 2},
+        formatItem: "{companyName}&nbsp;{customerCUIT}<br/>({customerCode}) {customerName}<br/>{customAttributeDesc}",
+        onItemSelect: function (li) {
+            if (li && li.elementData) {
+                $("#SearchBtn").attr("class", "btnDisabled").val("Buscando...").removeAttr("onclick");
+                location.href = 'details.asp?customerID=' + li.elementData.customerID;
+            } else
+                return false;
+        }
+    });
+
+
+WebService: 
+
+strSQLSelect =  "SELECT TOP 50 RTRIM(companyName) companyName,RTRIM(customerName) customerName,RTRIM(customerCode) customerCode,CONVERT(VARCHAR, customerID) customerID, autocompleteCuit, entityGUID, contactGUID"
+      
+        
+        strSQLSelect = strSQLSelect & " FROM VW_Admin_Customers_iCRM_Autocomplete "
+        strSQLSelect = strSQLSelect & " WHERE IL_CustomerID = " & IL_CustomerID
+        strSQLSelect = strSQLSelect & " AND (UPPER(companyName) LIKE UPPER('%"& textToSearch & "%') OR UPPER(autocompleteCuit) LIKE UPPER('%"& textToSearch & "%')  "
+        strSQLSelect = strSQLSelect & "OR UPPER(customerCode) LIKE UPPER('%"& textToSearch & "%') OR UPPER(entityCompanyName) LIKE UPPER('%"& textToSearch & "%') OR UPPER(completeName) LIKE UPPER('%"& textToSearch & "%'))"
+
+        
+        Response.ContentType = "application/json" 
+        'response.Write strSQLSelect
+        QueryToJSON(strSQLSelect).Flush
+        Response.End()
